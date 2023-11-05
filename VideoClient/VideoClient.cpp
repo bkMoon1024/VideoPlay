@@ -37,7 +37,6 @@ CVideoClientApp theApp;
 
 
 // CVideoClientApp 初始化
-
 BOOL CVideoClientApp::InitInstance()
 {
 	// 如果一个运行在 Windows XP 上的应用程序清单指定要
