@@ -11,7 +11,6 @@
 #define IDC_EDIT_PLAY                   1004
 #define IDC_EDIT_URL                    1005
 #define IDC_STATIC_VOLUME               1007
-#define IDC_STATIC_TIMER                1008
 #define IDC_STATIC_TIME                 1008
 
 // Next default values for new objects
