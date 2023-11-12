@@ -82,6 +82,11 @@ int VideoClientController::setVolume(const int& volume)
 	return m_vlc.setVolume(volume);
 }
 
+float VideoClientController::getLength()
+{
+	return m_vlc.getLength();
+}
+
 vlcSize VideoClientController::getMediaInfo()
 {
 	return m_vlc.getMediaInfo();

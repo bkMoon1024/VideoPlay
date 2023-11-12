@@ -32,6 +32,8 @@ public:
 	int getVolume();
 	int setVolume(const int& volume);
 
+	float getLength();
+
 	vlcSize getMediaInfo();
 
 	float videoCtrl(const EVlcCommand& cmd);

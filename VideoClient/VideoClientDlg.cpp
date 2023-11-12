@@ -6,6 +6,7 @@
 #include "framework.h"
 #include "VideoClient.h"
 #include "VideoClientDlg.h"
+#include "VideoClientController.h"
 #include "afxdialogex.h"
 
 #ifdef _DEBUG
@@ -60,13 +61,15 @@ BOOL CVideoClientDlg::OnInitDialog()
 
 	// TODO: 在此添加额外的初始化代码
 	SetTimer(0, 500, NULL);
-	m_pos.SetRange(0, 100);
+	m_pos.SetRange(0, 1);
 	m_volume.SetRange(0, 100);
-	m_volume.SetTic(10);
 	m_volume.SetTicFreq(20);
 
 	SetDlgItemText(IDC_STATIC_VOLUME, _T("100%"));
 	SetDlgItemText(IDC_STATIC_TIME, _T("--:--:--/--:--:--"));
+	m_controller->setHwnd(m_video.GetSafeHwnd());
+	m_url.SetWindowTextW(_T("file:///D:\\workspace\\VS\\eDoCloud\\VideoPlay\\test.mp4"));
+
 	return TRUE;  // 除非将焦点设置到控件，否则返回 TRUE
 }
 
@@ -113,8 +116,28 @@ void CVideoClientDlg::OnTimer(UINT_PTR nIDEvent)
 	// TODO: 在此添加消息处理程序代码和/或调用默认值
 	if (0 == nIDEvent) {
 		// 获取播放状态和进度信息
+		float pos = m_controller->getPosition();
+		int volume = m_controller->getVolume();
 		// IDC_STATIC_VOLUME更新音量
+		if (-1 != volume) {
+			CString str;
+			str.Format(_T("%d"), volume);
+			SetDlgItemText(IDC_STATIC_VOLUME, str);
+		}
+		
 		// IDC_STATIC_TIME 更新播放时间
+		if (-1 != pos) {
+			if (m_time <= 0.0f) {
+				m_time = m_controller->getLength(); // 总时长
+			}
+			m_pos.SetRange(0, (int)m_time);
+			CString str;
+			str.Format(_T("%f/%f"), pos * m_time, m_time);
+			SetDlgItemText(IDC_STATIC_TIME, str);
+			TRACE(_T("pos%d\n"), pos);
+			TRACE(_T("pos* time %d\n"), int(pos * m_time));
+			m_pos.SetPos(int(pos * m_time));
+		}
 
 
 	}
@@ -136,12 +159,17 @@ void CVideoClientDlg::OnBnClickedBtnPlay()
 {
 	// TODO: 在此添加控件通知处理程序代码
 	if (false == m_status) {
+		CString url;
+		m_url.GetWindowText(url);
+		m_controller->setMedia(m_controller->unicode2Utf8((LPCTSTR)url));
 		m_btnPlay.SetWindowTextW(_T("暂停"));
 		m_status = true;
+		m_controller->play();
 	}
 	else {
 		m_btnPlay.SetWindowTextW(_T("播放"));
 		m_status = false;
+		m_controller->pause();
 	}
 
 
@@ -153,7 +181,7 @@ void CVideoClientDlg::OnBnClickedBtnStop()
 	// TODO: 在此添加控件通知处理程序代码
 	m_btnPlay.SetWindowTextW(_T("播放"));
 	m_status = false;
-
+	m_controller->stop();
 }
 
 void CVideoClientDlg::OnTRBNThumbPosChangingSliderPos(NMHDR* pNMHDR, LRESULT* pResult)
@@ -189,8 +217,9 @@ void CVideoClientDlg::OnHScroll(UINT nSBCode, UINT nPos, CScrollBar* pScrollBar)
 	TRACE("pos = %p, volume = %p, cur %p pos = %d, code = %d\n", &m_pos, &m_volume, pScrollBar, nPos, nSBCode);
 	if (nSBCode == 5) {
 		CString strTime;
-		strTime.Format(_T("%d%%"), nPos);
+		strTime.Format(_T("%d"), nPos);
 		SetDlgItemText(IDC_STATIC_TIME, strTime);
+		m_controller->setPosition(float(nPos) / m_time);
 	}
 	CDialogEx::OnHScroll(nSBCode, nPos, pScrollBar);
 }
@@ -207,6 +236,7 @@ void CVideoClientDlg::OnVScroll(UINT nSBCode, UINT nPos, CScrollBar* pScrollBar)
 		CString strVolume;
 		strVolume.Format(_T("%d%%"), 100 - nPos);
 		SetDlgItemText(IDC_STATIC_VOLUME, strVolume);
+		m_controller->setVolume(100 - nPos);
 	}
 	
 	CDialogEx::OnVScroll(nSBCode, nPos, pScrollBar);

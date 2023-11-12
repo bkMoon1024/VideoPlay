@@ -3,7 +3,7 @@
 //
 
 #pragma once
-
+class VideoClientController;
 
 // CVideoClientDlg 对话框
 class CVideoClientDlg : public CDialogEx
@@ -34,15 +34,22 @@ public:
 	bool m_status = false;
 	afx_msg void OnTimer(UINT_PTR nIDEvent);
 	afx_msg void OnDestroy();
-	CEdit m_video;			// 播放视频画面
-	CSliderCtrl m_pos;		// 进度
-	CSliderCtrl m_volume;	// 音量大小
-	CEdit m_url;			// 播放地址
+	
 	afx_msg void OnBnClickedBtnPlay();
 	afx_msg void OnBnClickedBtnStop();
-	CButton m_btnPlay;		// 播放按钮
+	
 	afx_msg void OnTRBNThumbPosChangingSliderPos(NMHDR* pNMHDR, LRESULT* pResult);
 	afx_msg void OnTRBNThumbPosChangingSliderVolume(NMHDR* pNMHDR, LRESULT* pResult);
 	afx_msg void OnHScroll(UINT nSBCode, UINT nPos, CScrollBar* pScrollBar);
 	afx_msg void OnVScroll(UINT nSBCode, UINT nPos, CScrollBar* pScrollBar);
+protected:
+	CEdit m_video;			// 播放视频画面
+	CSliderCtrl m_pos;		// 进度
+	CSliderCtrl m_volume;	// 音量大小
+	CEdit m_url;			// 播放地址
+	CButton m_btnPlay;		// 播放按钮
+	float	m_time = 0;		// 视频总时长 单位：s
+
+public:
+	VideoClientController* m_controller = nullptr;
 };
