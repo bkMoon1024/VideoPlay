@@ -156,11 +156,11 @@ void CVideoClientDlg::OnBnClickedBtnStop()
 
 }
 
-
 void CVideoClientDlg::OnTRBNThumbPosChangingSliderPos(NMHDR* pNMHDR, LRESULT* pResult)
 {
 	// 此功能要求 Windows Vista 或更高版本。
 	// _WIN32_WINNT 符号必须 >= 0x0600。
+	// 哪怕满足了该情况 滑动条依然没有触发该事件 而是触发了OnHScroll和OnVScroll
 	NMTRBTHUMBPOSCHANGING* pNMTPC = reinterpret_cast<NMTRBTHUMBPOSCHANGING*>(pNMHDR);
 	// TODO: 在此添加控件通知处理程序代码
 	TRACE("pos = %d, reason %d\n", pNMTPC->dwPos, pNMTPC->nReason);
@@ -172,6 +172,7 @@ void CVideoClientDlg::OnTRBNThumbPosChangingSliderVolume(NMHDR* pNMHDR, LRESULT*
 {
 	// 此功能要求 Windows Vista 或更高版本。
 	// _WIN32_WINNT 符号必须 >= 0x0600。
+	// 哪怕满足了该情况 滑动条依然没有触发该事件 而是触发了OnHScroll和OnVScroll
 	NMTRBTHUMBPOSCHANGING* pNMTPC = reinterpret_cast<NMTRBTHUMBPOSCHANGING*>(pNMHDR);
 	// TODO: 在此添加控件通知处理程序代码
 	TRACE("pos = %d, reason %d\n", pNMTPC->dwPos, pNMTPC->nReason);
@@ -182,6 +183,9 @@ void CVideoClientDlg::OnTRBNThumbPosChangingSliderVolume(NMHDR* pNMHDR, LRESULT*
 void CVideoClientDlg::OnHScroll(UINT nSBCode, UINT nPos, CScrollBar* pScrollBar)
 {
 	// TODO: 在此添加消息处理程序代码和/或调用默认值
+	// pScrollBar用于判断当前是哪个滑动条
+	// nPos表示当前滑动条的位置
+	// nSBCode 表示当前对滑动条的操作
 	TRACE("pos = %p, volume = %p, cur %p pos = %d, code = %d\n", &m_pos, &m_volume, pScrollBar, nPos, nSBCode);
 	if (nSBCode == 5) {
 		CString strTime;
@@ -195,6 +199,9 @@ void CVideoClientDlg::OnHScroll(UINT nSBCode, UINT nPos, CScrollBar* pScrollBar)
 void CVideoClientDlg::OnVScroll(UINT nSBCode, UINT nPos, CScrollBar* pScrollBar)
 {
 	// TODO: 在此添加消息处理程序代码和/或调用默认值
+	// pScrollBar用于判断当前是哪个滑动条
+	// nPos表示当前滑动条的位置
+	// nSBCode 表示当前对滑动条的操作
 	TRACE("pos = %p, volume = %p, cur %p pos = %d, code = %d\n", &m_pos, &m_volume, pScrollBar, nPos, nSBCode);
 	if (nSBCode == 5) {
 		CString strVolume;
