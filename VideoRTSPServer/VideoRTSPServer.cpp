@@ -2,14 +2,15 @@
 //
 
 #include <iostream>
-#include "Socket.h"
-
-
+#include "RTSPServer.h"
 
 int main()
 {
-    SocketIniter initer;
-    std::cout << "Hello World!\n";
+    RTSPServer server;
+    server.init();
+    server.invoke();
+    getchar();
+    server.stop();
 
     return 0;
 }

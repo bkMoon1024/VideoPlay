@@ -1,9 +1,25 @@
 #pragma once
-#include "pch.h"
 #include <atomic>
 #include <vector>
 #include <mutex>
+#include <string>
+#include <varargs.h>
 #include <Windows.h>
+
+void ETrace(const char* format, ...) {
+	va_list ap;
+	va_start(ap, format);
+	std::string sBuffer;
+	sBuffer.resize(1024 * 10);
+	vsprintf((char*)(sBuffer.c_str()), format, ap);
+	OutputDebugStringA(sBuffer.c_str());
+	va_end(ap);
+}
+#ifndef TRACE
+#define TRACE ETrace
+#endif // !TRACE
+
+
 
 class ThreadFuncBase {};
 typedef int (ThreadFuncBase::* FUNCTYPE)();
