@@ -1,5 +1,6 @@
 #pragma once
 
+#include "CEdoyunQueue.h"
 #include "EdoyunThread.h"
 #include "Socket.h"
 #include <string>
@@ -36,6 +37,8 @@ public:
 	RTSPReply& operator=(const RTSPReply& protocol);
 	~RTSPReply();
 	
+	EBuffer toBuffer();
+
 private:
 	RTSPR m_method;
 
@@ -50,14 +53,18 @@ public:
 	
 };
 
+
+
 class RTSPServer : public ThreadFuncBase
 {
 public :
-	RTSPServer() : m_socket(true), m_status(0) {};
+	RTSPServer() : m_socket(true), m_status(0), m_pool(10) {
+		m_threadMain.UpdateWorker(::ThreadWorker(this, (FUNCTYPE)&RTSPServer::threadWorker));
+	};
 	~RTSPServer();
 
 	// 初始化
-	int init(const string& strIP = "127.0.0.1", short port = 554);
+	int init(const string& strIP = "0.0.0.0", short port = 554);
 
 	// 运行
 	int invoke();
@@ -66,7 +73,7 @@ public :
 	void stop();
 
 protected:
-	// 主线程执行函数
+	// 主线程执行函数 返回0-继续 负数-终止 其他-警告
 	int threadWorker();
 
 	// session线程执行函数
@@ -81,9 +88,11 @@ protected:
 private:
 	static SocketIniter	s_initer;
 	ESocket				m_socket;
+	EAddress			m_addr;		
 	int					m_status;	// 0-未初始化 1-初始化完成 2-正在运行 3-关闭
 	EdoyunThread		m_threadMain;
 	EdoyunThreadPool	m_pool;		// session线程池
 	map<string, RTSPSession> m_mapSession;
+	CEdoyunQueue<ESocket>	m_clients;	// 连接的客户端
 };
 

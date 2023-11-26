@@ -121,9 +121,7 @@ private:
 			if (worker.IsValid()) {
 				int ret = worker();
 				if (ret != 0) {
-					CString str;
-					str.Format(_T("thread found warning code %d\r\n"), ret);
-					OutputDebugString(str);
+					TRACE("thread found warning code %d\r\n", ret);
 				}
 				if (ret < 0) {
 					m_worker.store(NULL);
