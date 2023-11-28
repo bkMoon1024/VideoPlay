@@ -1,14 +1,15 @@
 #pragma once
 
+#include "Socket.h"
 #include "CEdoyunQueue.h"
 #include "EdoyunThread.h"
-#include "Socket.h"
 #include <string>
 #include <map>
 
 using namespace std;
 
 enum RTSPR {
+	RTSPR_UNKNOWN = -1,
 	RTSPR_OPTIONS = 0,
 	RTSPR_DESCRIBE = 1,
 	RTSPR_SETUP = 2,
@@ -24,8 +25,25 @@ public:
 	RTSPRequest& operator=(const RTSPRequest& protocol);
 	~RTSPRequest();
 
+	void setUrl(const EBuffer& url);
+	void setSession(const EBuffer& sess);
+	void setMethod(const EBuffer& method);
+	void setSequence(const EBuffer& seq);
+	void setClientPort(short port[]);
+
+	RTSPR method() const;
+	const EBuffer& url() const;
+	const EBuffer& session() const;
+	const EBuffer& sequence() const;
+	const EBuffer& clientPort(int idx = 0) const;
+
 private:
-	RTSPR m_method;
+	RTSPR	m_method;				// METHOD
+	EBuffer	m_url;		
+	EBuffer	m_session;
+	EBuffer	m_seq;					// CSeq
+	EBuffer	m_clientPort[2];		// RTP端口和RTCP端口，UDP套接字
+
 
 };
 
@@ -38,19 +56,51 @@ public:
 	~RTSPReply();
 	
 	EBuffer toBuffer();
+	
+	void setOptions(const EBuffer& options);
+	void setSequence(const EBuffer& seq);
+	void setSdp(const EBuffer& sdp);
+	void setClientPort(const EBuffer& port0, const EBuffer& port1);
+	void setServerPort(const EBuffer& port0, const EBuffer& port1);
+	void setSession(const EBuffer& sess);
 
 private:
-	RTSPR m_method;
-
+	RTSPR	m_method;
+	short	m_client_port[2];	// RTP端口和RTCP端口，UDP套接字
+	short	m_server_port[2];
+	EBuffer m_seq;
+	EBuffer	m_sdp;
+	EBuffer m_options;
+	EBuffer m_session;
 };
 
 class RTSPSession {
 public:
 	RTSPSession();
+	RTSPSession(const ESocket& client);
 	RTSPSession(const RTSPSession& sess);
 	RTSPSession& operator=(const RTSPSession& sess);
-	~RTSPSession();
+	~RTSPSession(){}
 	
+	// 解析并返回请求
+	int pickRequestAndReply();
+
+private:
+	EBuffer pickOneLine(EBuffer& buffer);
+
+	// 获取请求
+	EBuffer pick();
+
+	// 解析请求
+	RTSPRequest analyzeRequest(const EBuffer& buffer);
+
+	// 回应请求
+	RTSPReply reply(const RTSPRequest& request);
+
+
+private:
+	string	m_id;		// session ID:
+	ESocket m_client;	// session对应的客户端
 };
 
 
@@ -79,12 +129,6 @@ protected:
 	// session线程执行函数
 	int threadSession();
 
-	// 解析请求
-	RTSPRequest analyzeRequest(const string& data);
-	
-	// 响应请求
-	RTSPReply makeReply(const RTSPRequest& request);
-
 private:
 	static SocketIniter	s_initer;
 	ESocket				m_socket;
@@ -92,7 +136,6 @@ private:
 	int					m_status;	// 0-未初始化 1-初始化完成 2-正在运行 3-关闭
 	EdoyunThread		m_threadMain;
 	EdoyunThreadPool	m_pool;		// session线程池
-	map<string, RTSPSession> m_mapSession;
-	CEdoyunQueue<ESocket>	m_clients;	// 连接的客户端
+	CEdoyunQueue<RTSPSession>	m_sessionList;	// 连接的客户端
 };
 

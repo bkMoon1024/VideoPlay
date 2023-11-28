@@ -1,7 +1,10 @@
 #pragma once
 
 #include <WinSock2.h>
-#include <share.h>
+#include <string>
+#include <memory>
+
+#pragma comment(lib, "ws2_32.lib")
 
 using namespace std;
 
@@ -35,6 +38,51 @@ public:
 	void update(void* buffer, size_t size) {
 		resize(size);
 		memcpy((void*)c_str(), buffer, size);
+	}
+
+	// 清空数据，但不改变字符串长度
+	void zero() {
+		if (size() > 0) {
+			memset((void*)c_str(), 0, size());
+		}
+	}
+
+	EBuffer& operator<< (const EBuffer& str) {
+		if (this != str) {
+			*this += str;
+		}
+		else {
+			EBuffer tmp = str;
+			*this += tmp;
+		}
+		return *this;
+	}
+
+	EBuffer& operator<< (const string& str) {
+		*this += str;
+		return *this;
+	}
+
+	EBuffer& operator<< (const char* str) {
+		*this += str;
+		return *this;
+	}
+
+	EBuffer& operator<< (int data) {
+		char s[16] = "";
+		snprintf(s, sizeof(s), "%d", data);
+		*this += s;
+		return *this;
+	}
+
+	const EBuffer& operator>>(int& data) const {
+		data = atoi(c_str());
+		return *this;
+	}
+
+	const EBuffer& operator>>(short& data) const {
+		data = (short)atoi(c_str());
+		return *this;
 	}
 
 };
@@ -148,8 +196,8 @@ public:
 	ESocket& operator=(const ESocket& sock) {
 		if (this != &sock) {
 			m_socket = sock.m_socket;
-			return *this;
 		}
+		return *this;
 	}
 
 	~ESocket() {
@@ -164,7 +212,7 @@ public:
 		if (m_socket == nullptr) {
 			m_socket.reset(new Socket(m_bIsTCP));
 		}
-		::bind(*m_socket, addr, addr.size());
+		return ::bind(*m_socket, addr, addr.size());
 	}
 
 	int Listen(int backlog = 5) {
@@ -186,8 +234,25 @@ public:
 		return recv(*m_socket, buffer, buffer.size(), 0);
 	}
 
+	// 返回值： 大于0-发送数据的程度 等于0-对方关闭了ws连接 小于0-发送出错
 	int Send(const EBuffer& buffer) {
 		// 待优化 buffer较长的情况
+		int idx = 0;
+		char* pData = buffer;
+		while (idx < (int)buffer.size()) {
+			int ret = send(*m_socket, pData + idx, buffer.size() - idx, 0);
+			if (ret < 0) {
+				// 发送失败
+				return ret;
+			}
+			if (0 == ret) {
+				// 对方关闭了ws连接
+				break;
+			}
+
+			// 加上已发送的数据长度
+			idx += ret;
+		}
 		return send(*m_socket, buffer, buffer.size(), 0);
 	}
 
